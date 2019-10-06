@@ -7,13 +7,17 @@ import random
 epsilon = 0.01
 
 #path = sys.argv[1]
+path = ""
 #n = sys.argv[2]
 #k = sys.argv[3]
 
+features = ["popularity","revenue","vote_average","vote_count","runtime"]
+
 def transform(df,n,k): # one hot encode and select features and data points
+    features_to_drop = [f for f in df.columns if f not in features]
     for i in range(n):
-        df["genres"][i] = [g["name"] for g in eval(df["genres"][i])]
-        df["production_companies"][i] = [g["name"] for g in eval(df["production_companies"][i])]
+        df.at[i,"genres"] = [g["name"] for g in eval(df.loc[i,"genres"])]
+        df.at[i,"production_companies"] = [g["name"] for g in eval(df.loc[i,"production_companies"])]
 
     existing_languages = []
     existing_genres = []
@@ -28,11 +32,11 @@ def transform(df,n,k): # one hot encode and select features and data points
     for lang in existing_languages:
         df[lang] = np.zeros(n)
         for i in range(n):
-            df[lang][i] = int(lang == df["original_language"][i])
+            df.at[i,lang] = int(lang == df.at[i,"original_language"])
     for genre in existing_genres:
         df[genre] = np.zeros(n)
         for i in range(n):
-            df[genre][i] = int(genre in df["genres"][i])
+            df.at[i,genre] = int(genre in df.at[i,"genres"])
 
     df = df.drop(columns = features_to_drop)
 
@@ -46,8 +50,6 @@ def distance(a,b):
 def kmeans(n,k,init):
     data = pd.read_csv(path+"movies.csv")
     dataframe = pd.DataFrame(data).iloc[:n]
-    features = ["popularity","revenue","vote_average","vote_count","runtime"]
-    features_to_drop = [f for f in dataframe.columns if f not in features]
 
     df = transform(dataframe,n,k)
     if init == "random":
@@ -101,14 +103,14 @@ def kmeans(n,k,init):
         for j in range(k):
             loss = loss + sum([distance(vec,centers[j]) for vec in clusters[j]])
 
-        if counter%5 == 1:
-            print("Step {}: cost = {}\n".format(counter,loss))
+        #if counter%5 == 1:
+            #print("Step {}: cost = {}\n".format(counter,loss))
 
         if np.abs(prev_loss - loss) < epsilon:
-            print("Took {} steps to converge for epsilon = {}.\nFinal cost = {}".format(counter,epsilon,loss))
+            print("Took {} steps to converge for n = {}, k = {}.\nFinal cost = {}".format(counter,n,k,loss))
             break
 
         for j in range(k):
             centers[j] = sum(clusters[j])/len(clusters[j])
         counter += 1
-    return cluster_indices
+    return round(loss,3)
