@@ -1,3 +1,5 @@
+# to run do: exec(open("kmeans.py").read())
+
 import pandas as pd
 import sys
 from sklearn.preprocessing import OneHotEncoder
