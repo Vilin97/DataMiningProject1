@@ -112,7 +112,7 @@ def kmeans(dataframe,k,init):
     for j in range(k):
         for index in cluster_indices[j]:
             df.at[index,"cluster"] = j
-    return df,round(loss,2)
+    return df, round(cost,1)
 
 def do_kmeans(path,n,k,init):
     data = pd.read_csv(path+"movies.csv")
@@ -120,9 +120,12 @@ def do_kmeans(path,n,k,init):
     features = ["popularity","revenue","vote_average","vote_count","runtime"]
     df = transform(dataframe,features,True)
     if init == "1d":
-        return one_d_kmeans(df,k)
+        pca = PCA(n_components=1)
+        principal_component = pca.fit_transform(df)
+        series = pd.Series(pd.DataFrame(principal_component)[0])
+        return one_d_kmeans(series,k)
     else:
-        return kmeans(df,k,init)[0]
+        return kmeans(df,k,init)
 
 # Problem 3:
 def pca_2():
@@ -143,17 +146,15 @@ def pca_2():
 
 # Problem 4:
 def unit_cost(i,j,partial_square_sums,partial_sums):
-    if i != 0:
-        return (partial_square_sums[j] - partial_square_sums[i-1]) - (partial_sums[j] - partial_sums[i-1])**2
+    if j <= i:
+        return 0
+    elif i != 0:
+        return (partial_square_sums[j] - partial_square_sums[i-1]) - ((partial_sums[j] - partial_sums[i-1])**2)/(j+1-i)
     else:
-        return partial_square_sums[j] - partial_sums[j]**2
+        return partial_square_sums[j] - (partial_sums[j]**2)/(j+1-i)
 
-def one_d_kmeans(df,k):
-    n = len(df)
-
-    pca = PCA(n_components=1)
-    principal_component = pca.fit_transform(df)
-    series = pd.Series(pd.DataFrame(principal_component)[0])
+def one_d_kmeans(series,k):
+    n = len(series)
 
     sorted = series.sort_values()
 
@@ -201,4 +202,9 @@ def one_d_kmeans(df,k):
     for j in range(k):
         for index in clusters[j]:
             df.at[index,"cluster"] = j
-    return df
+    cost = costs[-1,-1]
+    print("For k = {} the cost = {}".format(k, round(cost,1)))
+    return df, round(cost,1)
+
+
+#one_d_clustered_df = do_kmeans("",,k,init)
