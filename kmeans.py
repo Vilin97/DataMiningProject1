@@ -207,4 +207,8 @@ def one_d_kmeans(series,k):
     return df, round(cost,1)
 
 
-#one_d_clustered_df = do_kmeans("",,k,init)
+#one_d_clustered_df = do_kmeans("",4803,k,"1d")
+#clustered_df = do_kmeans("",4803,k,"k-means++")
+def disagreement(series1,series2):
+    dis = series1 - series2
+    return np.linalg.norm(dis, ord=0)
