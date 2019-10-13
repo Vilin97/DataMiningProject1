@@ -119,7 +119,10 @@ def do_kmeans(path,n,k,init):
     dataframe = pd.DataFrame(data).iloc[:n]
     features = ["popularity","revenue","vote_average","vote_count","runtime"]
     df = transform(dataframe,features,True)
-    return kmeans(df,k,init)[0]
+    if init == "1d":
+        return one_d_kmeans(df,k)
+    else:
+        return kmeans(df,k,init)[0]
 
 # Problem 3:
 def pca_2():
@@ -139,63 +142,63 @@ def pca_2():
 
 
 # Problem 4:
-def unit_cost(i,j):
+def unit_cost(i,j,partial_square_sums,partial_sums):
     if i != 0:
         return (partial_square_sums[j] - partial_square_sums[i-1]) - (partial_sums[j] - partial_sums[i-1])**2
     else:
         return partial_square_sums[j] - partial_sums[j]**2
 
-#def one_d_kmeans(n,k):
-n = 6
-k = 4
-data = pd.read_csv(path+"movies.csv")
-df = pd.DataFrame(data)
-features = ["popularity","revenue","vote_average","vote_count","runtime"]
-df = transform(df,features,normalize = True).iloc[:n]
+def one_d_kmeans(df,k):
+    n = len(df)
 
-pca = PCA(n_components=1)
-principal_component = pca.fit_transform(df)
-series = pd.Series(pd.DataFrame(principal_component)[0])
+    pca = PCA(n_components=1)
+    principal_component = pca.fit_transform(df)
+    series = pd.Series(pd.DataFrame(principal_component)[0])
 
-sorted = series.sort_values()
+    sorted = series.sort_values()
 
-partial_sums = [0]*n
-partial_sums[0] = sorted.iloc[0]
-partial_square_sums = [0]*n
-partial_square_sums[0] = sorted.iloc[0]**2
-for i in range(1,n):
-    partial_sums[i] = partial_sums[i-1]+sorted.iloc[i]
-    partial_square_sums[i] = partial_square_sums[i-1]+sorted.iloc[i]**2
+    partial_sums = [0]*n
+    partial_sums[0] = sorted.iloc[0]
+    partial_square_sums = [0]*n
+    partial_square_sums[0] = sorted.iloc[0]**2
+    for i in range(1,n):
+        partial_sums[i] = partial_sums[i-1]+sorted.iloc[i]
+        partial_square_sums[i] = partial_square_sums[i-1]+sorted.iloc[i]**2
 
-unit_costs = np.array([[unit_cost(i,j) for j in range(n)] for i in range(n)]) # unit_costs[i,j] = cost of putting ith thru jth points in one cluster
-boundaries = [0.5]*(k-1)
+    unit_costs = np.array([[unit_cost(i,j,partial_square_sums,partial_sums) for j in range(n)] for i in range(n)]) # unit_costs[i,j] = cost of putting ith thru jth points in one cluster
+    boundaries = [0.5]*(k-1)
 
-costs = np.zeros((n,k)) # costs[i,j] = min cost for j+1 clusters of i+1 first points
-cutoffs = np.zeros((n,k))
-for i in range(n):
-    costs[i,0] = unit_costs[0,i]
-for j in range(1,k):
+    costs = np.zeros((n,k)) # costs[i,j] = min cost for j+1 clusters of i+1 first points
+    cutoffs = np.zeros((n,k))
     for i in range(n):
-        if i <= j:
-            costs[i,j] = 0
-        else:
-            a = [costs[q,j-1]+unit_costs[q+1,i] for q in range(i)]
-            q = np.argmin(a) # elt q is the last in the cluster
-            costs[i,j] = a[q]
-            cutoffs[i,j] = q
+        costs[i,0] = unit_costs[0,i]
+    for j in range(1,k):
+        for i in range(n):
+            if i <= j:
+                costs[i,j] = 0
+            else:
+                a = [costs[q,j-1]+unit_costs[q+1,i] for q in range(i)]
+                q = np.argmin(a) # elt q is the last in the cluster
+                costs[i,j] = a[q]
+                cutoffs[i,j] = q
 
-boundaries = [0]*k
-i = n-1
-j = k-1
-while j >= 0:
-    boundaries[j] = int(cutoffs[i,j])
-    i = int(cutoffs[i,j])
-    j = j - 1
+    boundaries = [0]*(k-1)
+    i = n-1
+    j = k-1
+    while j >= 1:
+        boundaries[j-1] = int(cutoffs[i,j])
+        i = int(cutoffs[i,j])
+        j = j - 1
 
-clusters = [[] for i in range(k)]
-j = 0
-for i in range(n):
-    if i > j:
-        j += 1
-    clusters[j].append(sorted.index[i])
-    #if i
+    clusters = [[] for i in range(k)]
+    j = 0
+    for i in range(n):
+        clusters[j].append(sorted.index[i])
+        if j < k-1 and boundaries[j] == i:
+            j += 1
+    df = pd.DataFrame(series)
+    df["cluster"] = np.zeros
+    for j in range(k):
+        for index in clusters[j]:
+            df.at[index,"cluster"] = j
+    return df
