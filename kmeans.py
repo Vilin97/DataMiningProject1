@@ -193,6 +193,7 @@ def do_kmeans(path,n,k,init):
 # Problem 3:
 def pca_2():
     n = 250
+    k = 6
     data = pd.read_csv(path+"movies.csv")
     df = pd.DataFrame(data)
     df["total_votes"] = df["vote_average"]*df["vote_count"]
@@ -203,11 +204,10 @@ def pca_2():
     pca = PCA(n_components=2)
     principal_components = pca.fit_transform(df)
     principal_df = pd.DataFrame(data=principal_components,columns=['pc1','pc2'])
-    for k in range(2,8):
-        clustered_df = kmeans(df,k,"k-means++")[0]
-        principal_df["cluster"] = clustered_df["cluster"]
-        visualize(principal_df,k)
-    return principal_df
+    clustered_df = kmeans(df,k,"k-means++")[0]
+    principal_df["cluster"] = clustered_df["cluster"]
+    visualize(principal_df,k)
+return principal_df
 
 def visualize(principal_df,k):
     n = len(principal_df)
