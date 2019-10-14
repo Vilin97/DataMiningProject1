@@ -98,11 +98,11 @@ def kmeans(dataframe,k,init):
         for j in range(k):
             loss = loss + sum([distance(vec,centers[j]) for vec in clusters[j]])
 
-        #if counter%5 == 1:
-            #print("Step {}: cost = {}\n".format(counter,loss))
+        if counter%10 == 0:
+            print("Step {}: cost = {}\n".format(counter,loss))
 
         if np.abs(prev_loss - loss) < epsilon:
-            print("Took {} steps to converge for n = {}, k = {}.\nFinal cost = {}".format(counter,n,k,loss))
+            print("Took {} steps to converge for n = {}, k = {}.\nFinal cost = {}\n".format(counter,n,k,loss))
             break
 
         for j in range(k):
@@ -112,7 +112,7 @@ def kmeans(dataframe,k,init):
     for j in range(k):
         for index in cluster_indices[j]:
             df.at[index,"cluster"] = j
-    return df, round(cost,1)
+    return df, round(loss,1)
 
 def do_kmeans(path,n,k,init):
     data = pd.read_csv(path+"movies.csv")
