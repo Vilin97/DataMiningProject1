@@ -11,11 +11,6 @@ import matplotlib.pyplot as plt
 
 epsilon = 0.01
 
-#path = sys.argv[1]
-path = ""
-#n = sys.argv[2]
-#k = sys.argv[3]
-
 def transform(dataframe,features,normalize): # one hot encode and select features and data points
     df = dataframe.copy()
     n = len(df)
@@ -207,7 +202,7 @@ def pca_2():
     clustered_df = kmeans(df,k,"k-means++")[0]
     principal_df["cluster"] = clustered_df["cluster"]
     visualize(principal_df,k)
-return principal_df
+    return principal_df
 
 def visualize(principal_df,k):
     n = len(principal_df)
@@ -249,3 +244,18 @@ def compare(k1,k2):
     disagreement = disagreement_distance(series1,series2)
     print("disagreement distance = {}".format(disagreement))
     return disagreement
+
+
+n = 50
+
+path = sys.argv[1]
+k = eval(sys.argv[2])
+init = sys.argv[3]
+data = pd.read_csv(path+"movies.csv")
+df = pd.DataFrame(data).iloc[:n]
+
+clustered_df = do_kmeans(path,n,k,init)[0]
+output_df = pd.DataFrame(columns = ["id","cluster"])
+output_df["id"] = df["id"]
+output_df["cluster"] = clustered_df["cluster"]
+output_df.to_csv(r'output.csv')
