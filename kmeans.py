@@ -1,4 +1,5 @@
-# to run do: exec(open("kmeans.py").read())
+# to run do:
+# exec(open("kmeans.py").read())
 
 import pandas as pd
 import sys
@@ -109,39 +110,6 @@ def kmeans(dataframe,k,init):
         for index in cluster_indices[j]:
             df.at[index,"cluster"] = j
     return df, round(loss,1)
-<<<<<<< HEAD
-
-def do_kmeans(path,n,k,init):
-    data = pd.read_csv(path+"movies.csv")
-    dataframe = pd.DataFrame(data).iloc[:n]
-    features = ["popularity","revenue","vote_average","vote_count","runtime"]
-    df = transform(dataframe,features,True)
-    if init == "1d":
-        pca = PCA(n_components=1)
-        principal_component = pca.fit_transform(df)
-        series = pd.Series(pd.DataFrame(principal_component)[0])
-        return one_d_kmeans(series,k)
-    else:
-        return kmeans(df,k,init)
-
-# Problem 3:
-def pca_2():
-    n = 250
-    data = pd.read_csv(path+"movies.csv")
-    df = pd.DataFrame(data)
-    df["total_votes"] = df["vote_average"]*df["vote_count"]
-    df = df.sort_values(by=['total_votes'],ascending = False).iloc[:n]
-    features = ["popularity","revenue","vote_average","vote_count","runtime","total_votes"]
-    df = transform(df,features,normalize = True)
-
-    pca = PCA(n_components=2)
-    principal_components = pca.fit_transform(df)
-    principal_df = pd.DataFrame(data=principal_components,columns=['pc1','pc2'])
-    principal_df["cluster"] = clustered_df["cluster"]
-    return principal_df
-
-=======
->>>>>>> da6793321d78c2b564acacaaa6327854b7f61307
 
 # Problem 4:
 def unit_cost(i,j,partial_square_sums,partial_sums):
@@ -219,7 +187,7 @@ def do_kmeans(path,n,k,init):
         return kmeans(df,k,init)
 
 # Problem 3:
-def pca_2():
+def pca_2(path):
     n = 250
     k = 6
     data = pd.read_csv(path+"movies.csv")
@@ -279,16 +247,19 @@ def compare(k1,k2):
     return disagreement
 
 
-n = 50
+n = 500
 
-path = sys.argv[1]
-k = eval(sys.argv[2])
-init = sys.argv[3]
-data = pd.read_csv(path+"movies.csv")
-df = pd.DataFrame(data).iloc[:n]
+try:
+    path = sys.argv[1]
+    k = eval(sys.argv[2])
+    init = sys.argv[3]
+    data = pd.read_csv(path+"movies.csv")
+    df = pd.DataFrame(data).iloc[:n]
 
-clustered_df = do_kmeans(path,n,k,init)[0]
-output_df = pd.DataFrame(columns = ["id","cluster"])
-output_df["id"] = df["id"]
-output_df["cluster"] = clustered_df["cluster"]
-output_df.to_csv(r'output.csv')
+    clustered_df = do_kmeans(path,n,k,init)[0]
+    output_df = pd.DataFrame(columns = ["id","cluster"])
+    output_df["id"] = df["id"]
+    output_df["cluster"] = clustered_df["cluster"]
+    output_df.to_csv(r'output.csv')
+except:
+    x = 42
