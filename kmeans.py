@@ -7,13 +7,9 @@ from sklearn.decomposition import PCA
 from sklearn.impute import SimpleImputer
 import numpy as np
 import random
+import matplotlib.pyplot as plt
 
 epsilon = 0.01
-
-#path = sys.argv[1]
-path = ""
-#n = sys.argv[2]
-#k = sys.argv[3]
 
 def transform(dataframe,features,normalize): # one hot encode and select features and data points
     df = dataframe.copy()
@@ -113,6 +109,7 @@ def kmeans(dataframe,k,init):
         for index in cluster_indices[j]:
             df.at[index,"cluster"] = j
     return df, round(loss,1)
+<<<<<<< HEAD
 
 def do_kmeans(path,n,k,init):
     data = pd.read_csv(path+"movies.csv")
@@ -143,6 +140,8 @@ def pca_2():
     principal_df["cluster"] = clustered_df["cluster"]
     return principal_df
 
+=======
+>>>>>>> da6793321d78c2b564acacaaa6327854b7f61307
 
 # Problem 4:
 def unit_cost(i,j,partial_square_sums,partial_sums):
@@ -203,12 +202,93 @@ def one_d_kmeans(series,k):
         for index in clusters[j]:
             df.at[index,"cluster"] = j
     cost = costs[-1,-1]
-    print("For k = {} the cost = {}".format(k, round(cost,1)))
+    #print("For k = {} the cost = {}".format(k, round(cost,1)))
     return df, round(cost,1)
 
+def do_kmeans(path,n,k,init):
+    data = pd.read_csv(path+"movies.csv")
+    dataframe = pd.DataFrame(data).iloc[:n]
+    features = ["popularity","revenue","vote_average","vote_count","runtime"]
+    df = transform(dataframe,features,True)
+    if init == "1d":
+        pca = PCA(n_components=1)
+        principal_component = pca.fit_transform(df)
+        series = pd.Series(pd.DataFrame(principal_component)[0])
+        return one_d_kmeans(series,k)
+    else:
+        return kmeans(df,k,init)
 
-#one_d_clustered_df = do_kmeans("",4803,k,"1d")
-#clustered_df = do_kmeans("",4803,k,"k-means++")
-def disagreement(series1,series2):
-    dis = series1 - series2
-    return np.linalg.norm(dis, ord=0)
+# Problem 3:
+def pca_2():
+    n = 250
+    k = 6
+    data = pd.read_csv(path+"movies.csv")
+    df = pd.DataFrame(data)
+    df["total_votes"] = df["vote_average"]*df["vote_count"]
+    df = df.sort_values(by=['total_votes'],ascending = False).iloc[:n]
+    features = ["popularity","revenue","vote_average","vote_count","runtime","total_votes"]
+    df = transform(df,features,normalize = True)
+
+    pca = PCA(n_components=2)
+    principal_components = pca.fit_transform(df)
+    principal_df = pd.DataFrame(data=principal_components,columns=['pc1','pc2'])
+    clustered_df = kmeans(df,k,"k-means++")[0]
+    principal_df["cluster"] = clustered_df["cluster"]
+    visualize(principal_df,k)
+    return principal_df
+
+def visualize(principal_df,k):
+    n = len(principal_df)
+    colors = "r g b c m y k purple orange gold greenyellow aqua crimson magenta".split()
+    clusters = ["cluster"+str(i) for i in range(k)]
+
+    fig = plt.figure(figsize = (8,8))
+    ax = fig.add_subplot(1,1,1)
+    ax.set_xlabel('Principal Component 1', fontsize = 15)
+    ax.set_ylabel('Principal Component 2', fontsize = 15)
+    ax.set_title('2 component PCA', fontsize = 20)
+    for i in range(n):
+        cluster = principal_df.at[i,"cluster"]
+        color = colors[cluster]
+        ax.scatter(principal_df.at[i,"pc1"],principal_df.at[i,"pc2"],c = color,s=30)
+    #ax.legend()
+    plt.show()
+    return
+
+# Problem 5:
+
+def disagreement_distance(series1,series2):
+    # series1[i] = cluster of ith movie in the first clustering
+    # return disagreement distance between two clusterings
+    n = min(len(series1),len(series2))
+    disagreement = 0
+    for i in range(n):
+        for j in range(i+1):
+            if (series1[i] == series1[j] and series2[i] != series2[j]) or (series1[i] != series1[j] and series2[i] == series2[j]):
+                disagreement += 1
+    return disagreement
+
+def compare(k1,k2):
+    # k1, k2 = # of clusters for 1d and kmeans++ respectively
+    one_d_clustered_df = do_kmeans("",n,k1,"1d")[0]
+    clustered_df = do_kmeans("",n,k2,"k-means++")[0]
+    series1 = one_d_clustered_df["cluster"]
+    series2 = clustered_df["cluster"]
+    disagreement = disagreement_distance(series1,series2)
+    print("disagreement distance = {}".format(disagreement))
+    return disagreement
+
+
+n = 50
+
+path = sys.argv[1]
+k = eval(sys.argv[2])
+init = sys.argv[3]
+data = pd.read_csv(path+"movies.csv")
+df = pd.DataFrame(data).iloc[:n]
+
+clustered_df = do_kmeans(path,n,k,init)[0]
+output_df = pd.DataFrame(columns = ["id","cluster"])
+output_df["id"] = df["id"]
+output_df["cluster"] = clustered_df["cluster"]
+output_df.to_csv(r'output.csv')
